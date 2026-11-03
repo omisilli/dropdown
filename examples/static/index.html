@@ -8,7 +8,7 @@
         <title>dropdown — example</title>
         <link
             rel="stylesheet"
-            href="https://cdn.jsdelivr.net/gh/omisilli/dropdown@v1.3.0/index.css"
+            href="https://cdn.jsdelivr.net/gh/omisilli/dropdown@v1.4.0/index.css"
         />
         <style>
             :root {
@@ -225,6 +225,48 @@
                 margin-top: 0.6rem;
                 color: var(--muted);
                 font-size: 0.9rem;
+            }
+            /* Search: the field stays on top while the list scrolls under it. */
+            .searchable {
+                width: 17rem;
+                padding-top: 0;
+            }
+            .search-row {
+                position: sticky;
+                top: 0;
+                display: flex;
+                gap: 0.3rem;
+                margin: 0 -0.3rem 0.3rem;
+                padding: 0.4rem;
+                background: var(--surface);
+                border-bottom: 1px solid var(--line);
+            }
+            .search-row input {
+                flex: 1;
+                min-width: 0;
+                font: inherit;
+                color: inherit;
+                padding: 0.35rem 0.6rem;
+                border: 1px solid var(--line);
+                border-radius: 0.45rem;
+                background: var(--bg);
+            }
+            [data-pg-dropdown-body] .search-row .aa {
+                width: auto;
+                padding: 0 0.6rem;
+                border: 1px solid var(--line);
+                font-family: ui-monospace, monospace;
+                font-size: 0.8rem;
+                text-align: center;
+            }
+            [data-pg-dropdown-body] .search-row .aa[aria-pressed="true"] {
+                background: var(--accent);
+                border-color: var(--accent);
+                color: #fff;
+            }
+            .empty {
+                padding: 0.5rem 0.7rem;
+                color: var(--muted);
             }
             .tips li {
                 margin: 0.4rem 0 0 1.25rem;
@@ -477,6 +519,138 @@
                 scaled down.
             </p>
 
+            <h2>Search</h2>
+            <div class="row wrap">
+                <div data-pg-dropdown data-pg-dropdown-active="false" data-pg-dropdown-flip="y">
+                    <button type="button" data-pg-dropdown-head aria-expanded="false">
+                        Searchable
+                    </button>
+                    <div data-pg-dropdown-body class="searchable">
+                        <div class="search-row">
+                            <input
+                                type="search"
+                                data-pg-dropdown-search
+                                placeholder="Search names…"
+                                aria-label="Search names"
+                            />
+                            <button
+                                type="button"
+                                class="aa"
+                                data-pg-dropdown-search-case-toggle
+                                aria-pressed="false"
+                                title="Match case"
+                            >
+                                Aa
+                            </button>
+                        </div>
+                        <a href="#" data-pg-dropdown-item>İlknur Işık</a>
+                        <a href="#" data-pg-dropdown-item>Irmak Çelik</a>
+                        <a href="#" data-pg-dropdown-item>Ümit Şenol</a>
+                        <a href="#" data-pg-dropdown-item>Elif Şahin</a>
+                        <a href="#" data-pg-dropdown-item>İsmail Yıldız</a>
+                        <a href="#" data-pg-dropdown-item>Ignacio Ibáñez</a>
+                        <a href="#" data-pg-dropdown-item>José Muñoz</a>
+                        <a href="#" data-pg-dropdown-item>Ingrid Ølstad</a>
+                        <a href="#" data-pg-dropdown-item>François Lefèvre</a>
+                        <a href="#" data-pg-dropdown-item>Jürgen Müller</a>
+                        <a href="#" data-pg-dropdown-item>Łukasz Żółć</a>
+                        <a href="#" data-pg-dropdown-item>Đorđe Petrović</a>
+                        <p class="empty" data-pg-dropdown-empty hidden>No names match.</p>
+                    </div>
+                </div>
+                <div
+                    data-pg-dropdown
+                    data-pg-dropdown-active="false"
+                    data-pg-dropdown-flip="y"
+                    data-pg-dropdown-search-case="sensitive"
+                >
+                    <button type="button" data-pg-dropdown-head aria-expanded="false">Aa on</button>
+                    <div data-pg-dropdown-body class="searchable">
+                        <div class="search-row">
+                            <input
+                                type="search"
+                                data-pg-dropdown-search
+                                placeholder="Search names…"
+                                aria-label="Search names"
+                            />
+                            <button
+                                type="button"
+                                class="aa"
+                                data-pg-dropdown-search-case-toggle
+                                aria-pressed="true"
+                                title="Match case"
+                            >
+                                Aa
+                            </button>
+                        </div>
+                        <a href="#" data-pg-dropdown-item>İlknur Işık</a>
+                        <a href="#" data-pg-dropdown-item>Irmak Çelik</a>
+                        <a href="#" data-pg-dropdown-item>Ümit Şenol</a>
+                        <a href="#" data-pg-dropdown-item>Elif Şahin</a>
+                        <a href="#" data-pg-dropdown-item>İsmail Yıldız</a>
+                        <a href="#" data-pg-dropdown-item>Ignacio Ibáñez</a>
+                        <a href="#" data-pg-dropdown-item>José Muñoz</a>
+                        <a href="#" data-pg-dropdown-item>Ingrid Ølstad</a>
+                        <a href="#" data-pg-dropdown-item>François Lefèvre</a>
+                        <a href="#" data-pg-dropdown-item>Jürgen Müller</a>
+                        <a href="#" data-pg-dropdown-item>Łukasz Żółć</a>
+                        <a href="#" data-pg-dropdown-item>Đorđe Petrović</a>
+                        <p class="empty" data-pg-dropdown-empty hidden>No names match.</p>
+                    </div>
+                </div>
+                <div
+                    data-pg-dropdown
+                    data-pg-dropdown-active="false"
+                    data-pg-dropdown-flip="y"
+                    data-pg-dropdown-search-accents="keep"
+                >
+                    <button type="button" data-pg-dropdown-head aria-expanded="false">
+                        Keep accents
+                    </button>
+                    <div data-pg-dropdown-body class="searchable">
+                        <div class="search-row">
+                            <input
+                                type="search"
+                                data-pg-dropdown-search
+                                placeholder="Search names…"
+                                aria-label="Search names"
+                            />
+                            <button
+                                type="button"
+                                class="aa"
+                                data-pg-dropdown-search-case-toggle
+                                aria-pressed="false"
+                                title="Match case"
+                            >
+                                Aa
+                            </button>
+                        </div>
+                        <a href="#" data-pg-dropdown-item lang="tr">İlknur Işık</a>
+                        <a href="#" data-pg-dropdown-item lang="tr">Irmak Çelik</a>
+                        <a href="#" data-pg-dropdown-item lang="tr">Ümit Şenol</a>
+                        <a href="#" data-pg-dropdown-item lang="tr">Elif Şahin</a>
+                        <a href="#" data-pg-dropdown-item lang="tr">İsmail Yıldız</a>
+                        <a href="#" data-pg-dropdown-item lang="es">Ignacio Ibáñez</a>
+                        <a href="#" data-pg-dropdown-item lang="es">José Muñoz</a>
+                        <a href="#" data-pg-dropdown-item lang="no">Ingrid Ølstad</a>
+                        <a href="#" data-pg-dropdown-item lang="fr">François Lefèvre</a>
+                        <a href="#" data-pg-dropdown-item lang="de">Jürgen Müller</a>
+                        <a href="#" data-pg-dropdown-item lang="pl">Łukasz Żółć</a>
+                        <a href="#" data-pg-dropdown-item lang="sr">Đorđe Petrović</a>
+                        <p class="empty" data-pg-dropdown-empty hidden>No names match.</p>
+                    </div>
+                </div>
+            </div>
+            <p class="note">
+                Put an <code>&lt;input data-pg-dropdown-search&gt;</code> in the body and mark the
+                options <code>data-pg-dropdown-item</code>. By default case and accents are ignored:
+                <code>sahin</code> finds Şahin, <code>olstad</code> finds Ølstad,
+                <code>ilk is</code> finds İlknur Işık. <strong>Aa</strong> makes case count. The
+                third keeps accents, and each name carries its own <code>lang</code>: Turkish names
+                follow Turkish rules, so <code>irmak</code> does not find Irmak there (in Turkish, I
+                lowers to ı).
+            </p>
+
             <h2>Scroll threshold</h2>
             <div class="row">
                 <div
@@ -516,7 +690,7 @@
         </main>
 
         <script type="module">
-            import { initDropdown } from "https://cdn.jsdelivr.net/gh/omisilli/dropdown@v1.3.0/dist/index.js";
+            import { initDropdown } from "https://cdn.jsdelivr.net/gh/omisilli/dropdown@v1.4.0/dist/index.js";
 
             initDropdown();
 

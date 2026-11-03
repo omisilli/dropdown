@@ -14,7 +14,7 @@ stylesheet, no dependencies, framework-agnostic.
 ```
 
 ```sh
-npm install github:omisilli/dropdown#v1.3.0
+npm install github:omisilli/dropdown#v1.4.0
 ```
 
 ```ts
@@ -36,16 +36,16 @@ Load both halves straight from jsDelivr — no install, and the page works
 when opened by double-clicking:
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/omisilli/dropdown@v1.3.0/index.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/omisilli/dropdown@v1.4.0/index.css" />
 
 <script type="module">
-    import { initDropdown } from "https://cdn.jsdelivr.net/gh/omisilli/dropdown@v1.3.0/dist/index.js";
+    import { initDropdown } from "https://cdn.jsdelivr.net/gh/omisilli/dropdown@v1.4.0/dist/index.js";
 
     initDropdown();
 </script>
 ```
 
-Pin the version (`@v1.3.0`) on a live site. A pinned URL never changes;
+Pin the version (`@v1.4.0`) on a live site. A pinned URL never changes;
 `@1` follows the newest 1.x release.
 
 ## Files
@@ -238,6 +238,76 @@ placement cannot keep a preferred side and shrink only when nothing fits,
 so for that one opening dropdown measures and places the body itself.
 
 `data-pg-dropdown-side` and `data-pg-dropdown-align` report where it went.
+
+## Search
+
+Put a search field in the body and mark the options; that is all it takes.
+
+```html
+<div data-pg-dropdown data-pg-dropdown-active="false" data-pg-dropdown-flip>
+    <button data-pg-dropdown-head aria-expanded="false">People</button>
+    <div data-pg-dropdown-body>
+        <input type="search" data-pg-dropdown-search placeholder="Search…" />
+        <button type="button" data-pg-dropdown-search-case-toggle aria-pressed="false">Aa</button>
+
+        <a href="#" data-pg-dropdown-item>İlknur Işık</a>
+        <a href="#" data-pg-dropdown-item>Jürgen Müller</a>
+        <a href="#" data-pg-dropdown-item="NYC">New York</a>
+
+        <p data-pg-dropdown-empty hidden>No results</p>
+    </div>
+</div>
+```
+
+| Attribute                             | On        | Meaning                                                            |
+| ------------------------------------- | --------- | ------------------------------------------------------------------ |
+| `data-pg-dropdown-search`             | `<input>` | The search field                                                   |
+| `data-pg-dropdown-item`               | option    | Searched. A value adds words to its text: short forms, other names |
+| `data-pg-dropdown-empty`              | any       | Shown while nothing matches                                        |
+| `data-pg-dropdown-search-case-toggle` | button    | The Aa button: flips case sensitivity; `aria-pressed` follows it   |
+| `data-pg-dropdown-search-case`        | container | `insensitive` (default) · `sensitive`                              |
+| `data-pg-dropdown-search-accents`     | container | `ignore` (default) · `keep`                                        |
+| `data-pg-dropdown-search-locale`      | container | The language whose case rules apply — see below                    |
+
+- **Every word** of the query has to appear: `ilk is` finds İlknur Işık.
+- **Ignoring accents** strips marks (é → e, ş → s, ü → u) and reads letters
+  that have no mark to strip as their plain form: ı → i, ø → o, ł → l,
+  đ → d, ß → ss. `sahin` finds Şahin, `olstad` finds Ølstad.
+- Options that do not match get the `hidden` attribute, so screen readers
+  skip them too. `index.css` keeps them hidden even against a theme's own
+  `display` (a Tailwind `block` class, for one).
+- Opening it puts focus in the search field. Closing it clears the search,
+  so the next opening shows the whole list.
+- Every keystroke fires a `pg-dropdown-search` event on the container, with
+  `event.detail.query`. dropdown only filters the options already on the
+  page; an app that fetches results of its own listens for this and renders
+  them as options.
+
+### Languages
+
+Upper and lower case follow a language's own rules. In Turkish `İ` lowers to
+`i` and `I` to `ı`; in English `I` lowers to `i`. So the search needs to know
+the language.
+
+- **Nothing to set on a multilingual site.** Without
+  `data-pg-dropdown-search-locale`, the nearest `lang` is used — usually
+  `<html lang>`. An English page searches with English rules, a Turkish page
+  with Turkish ones.
+- **Any language tag** works: `tr`, `en`, `en-US`, `de`, `az`. Tags use a
+  hyphen; `en_US`, as some systems write it, is accepted too. A tag the
+  browser does not know falls back to its default rules — the search keeps
+  working.
+- **Lists that mix languages.** One text cannot follow two sets of rules at
+  once, but by default it does not have to: with accents ignored, Turkish
+  `I → ı → i` and English `I → i` end in the same letter. The difference only
+  shows with `data-pg-dropdown-search-accents="keep"`. For that, give each
+  option its own `lang` — the same attribute screen readers use to pronounce
+  it. The query is read in the container's language, each option in its own:
+
+```html
+<a href="#" data-pg-dropdown-item lang="tr">Irmak Çelik</a>
+<a href="#" data-pg-dropdown-item lang="en">Ingrid Olsen</a>
+```
 
 ## CSS
 

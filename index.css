@@ -173,3 +173,13 @@
         position-try-fallbacks: none;
     }
 }
+
+/* Search: options that do not match, and the "nothing found" line while
+   something does, carry the hidden attribute. !important here wins over a
+   theme's own display (a Tailwind "block" class, for one) even from this
+   lower layer — an important rule in an earlier layer beats a normal one
+   in a later layer. */
+[data-pg-dropdown-item][hidden],
+[data-pg-dropdown-empty][hidden] {
+    display: none !important;
+}

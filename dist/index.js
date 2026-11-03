@@ -28,6 +28,15 @@
  *                                                              like a flip
  *   data-pg-dropdown-scroll-threshold   px the user must scroll to close it
  *
+ * Search: put an <input data-pg-dropdown-search> in the body and mark the
+ * options data-pg-dropdown-item. Options for it, on the container:
+ *   data-pg-dropdown-search-case        insensitive (default) | sensitive
+ *   data-pg-dropdown-search-accents     ignore (default) | keep
+ *   data-pg-dropdown-search-locale      the language's case rules; default
+ *                                       the page's lang
+ * A button data-pg-dropdown-search-case-toggle flips case sensitivity, and
+ * data-pg-dropdown-empty shows when nothing matches.
+ *
  * React: JSX sets the starting value (data-pg-dropdown-active="false") and
  * must not change it afterwards — from then on this file owns it.
  */
@@ -41,6 +50,13 @@ const FLIP = "data-pg-dropdown-flip";
 const SIDE = "data-pg-dropdown-side";
 const ALIGN = "data-pg-dropdown-align";
 const THRESHOLD = "data-pg-dropdown-scroll-threshold";
+const SEARCH = "data-pg-dropdown-search";
+const ITEM = "data-pg-dropdown-item";
+const EMPTY = "data-pg-dropdown-empty";
+const CASE = "data-pg-dropdown-search-case";
+const ACCENTS = "data-pg-dropdown-search-accents";
+const LOCALE = "data-pg-dropdown-search-locale";
+const CASE_TOGGLE = "data-pg-dropdown-search-case-toggle";
 /* Keys that scroll the page — unless focus is in a field or on a control,
    where they type or press instead. */
 const SCROLL_KEYS = new Set(["PageDown", "PageUp", "Home", "End", "ArrowDown", "ArrowUp", " "]);
@@ -68,6 +84,99 @@ function headOf(root) {
 }
 function bodyOf(root) {
     return root.querySelector(`[${BODY}]`);
+}
+function searchOf(root) {
+    return root.querySelector(`[${SEARCH}]`);
+}
+/* Letters that carry no accent mark to strip, but that a reader takes for
+   a plain letter anyway: ignoring accents should make "ir" find "Irmak"
+   and "olstad" find "Ølstad". */
+const BASE_LETTERS = {
+    ı: "i",
+    ø: "o",
+    Ø: "O",
+    ł: "l",
+    Ł: "L",
+    đ: "d",
+    Đ: "D",
+    ß: "ss",
+    æ: "ae",
+    Æ: "AE",
+    œ: "oe",
+    Œ: "OE",
+};
+/* The language whose case rules apply. A container's
+   data-pg-dropdown-search-locale wins; otherwise the nearest lang — the
+   page's <html lang>, so a multilingual site needs nothing extra. */
+function localeOf(root) {
+    return root.getAttribute(LOCALE) || root.closest("[lang]")?.getAttribute("lang") || undefined;
+}
+/* An option's own language: a lang on the option, or on something between
+   it and the container. Lists that mix languages mark each name this way. */
+function itemLocaleOf(item, root) {
+    const marked = item.closest("[lang]");
+    return marked && root.contains(marked)
+        ? marked.getAttribute("lang") || undefined
+        : localeOf(root);
+}
+/* Lower case by a language's rules. Language tags use a hyphen (en-US);
+   en_US, as some systems write it, is accepted too. A tag the browser does
+   not know falls back to its default rules rather than stopping the search
+   — toLocaleLowerCase throws on a malformed tag. */
+function lowerCase(text, locale) {
+    if (!locale)
+        return text.toLocaleLowerCase();
+    try {
+        return text.toLocaleLowerCase(locale.replace(/_/g, "-"));
+    }
+    catch {
+        return text.toLocaleLowerCase();
+    }
+}
+/* Text as the search compares it. Case follows the language's own rules —
+   in Turkish İ lowers to i and I to ı — so it is done before accents are
+   stripped: "İ" splits into I plus a dot, which must not be lowered alone.
+   With accents ignored, the Turkish and English results meet again (ı → i),
+   which is why the default handles lists that mix languages. */
+function foldText(text, root, locale) {
+    let folded = text.normalize("NFC");
+    if (root.getAttribute(CASE) !== "sensitive")
+        folded = lowerCase(folded, locale);
+    if (root.getAttribute(ACCENTS) !== "keep") {
+        folded = folded
+            .normalize("NFD")
+            .replace(/\p{M}/gu, "")
+            .replace(/[ıøØłŁđĐßæÆœŒ]/g, (letter) => BASE_LETTERS[letter]);
+    }
+    return folded;
+}
+/* Show the options that hold every word of the query, hide the rest. The
+   query is read in the container's language, each option in its own. An
+   option's own value, if it has one, is searched as well as its text — for
+   short forms and other names. */
+function filter(root) {
+    const input = searchOf(root);
+    if (!input)
+        return;
+    const words = foldText(input.value, root, localeOf(root)).split(/\s+/).filter(Boolean);
+    let shown = 0;
+    root.querySelectorAll(`[${ITEM}]`).forEach((item) => {
+        const text = foldText(`${item.getAttribute(ITEM) ?? ""} ${item.textContent ?? ""}`, root, itemLocaleOf(item, root));
+        const match = words.every((word) => text.includes(word));
+        item.hidden = !match;
+        if (match)
+            shown++;
+    });
+    root.querySelectorAll(`[${EMPTY}]`).forEach((empty) => {
+        empty.hidden = shown > 0;
+    });
+}
+/* aria-pressed on the Aa button says whether case now counts. */
+function syncCaseToggle(root) {
+    const sensitive = root.getAttribute(CASE) === "sensitive";
+    root.querySelectorAll(`[${CASE_TOGGLE}]`).forEach((button) => {
+        button.setAttribute("aria-pressed", String(sensitive));
+    });
 }
 function isOpen(root) {
     return root.getAttribute(ACTIVE) === "true";
@@ -267,14 +376,26 @@ export function initDropdown() {
         root.setAttribute(ACTIVE, String(open));
         const head = headOf(root);
         head?.setAttribute("aria-expanded", String(open));
+        const input = searchOf(root);
         if (open) {
             opened = { root, y: scrollY, userScrolled: false };
+            syncCaseToggle(root);
             float(root);
+            // A searchable list opens ready to type into. A frame later: the
+            // press that opened it would otherwise hand focus straight back to
+            // the head (focusing on mousedown is the browser's default).
+            if (input)
+                requestAnimationFrame(() => input.focus({ preventScroll: true }));
             return;
         }
         if (opened?.root === root)
             opened = null;
         sink(root);
+        // The next opening starts with the whole list.
+        if (input && input.value) {
+            input.value = "";
+            filter(root);
+        }
         // Closing with focus inside the body: hand focus back to the head
         // rather than let it fall to <body>.
         if (head && root.contains(document.activeElement) && document.activeElement !== head) {
@@ -319,10 +440,35 @@ export function initDropdown() {
             toggle(root);
             return;
         }
+        // The Aa button: flip case sensitivity, filter again, and hand focus
+        // back to the search field so typing carries on.
+        if (target?.closest(`[${CASE_TOGGLE}]`)) {
+            const sensitive = root.getAttribute(CASE) === "sensitive";
+            root.setAttribute(CASE, sensitive ? "insensitive" : "sensitive");
+            syncCaseToggle(root);
+            filter(root);
+            searchOf(root)?.focus({ preventScroll: true });
+            return;
+        }
         // Something chosen in the body: close. Matters for client-side
         // navigation, where the page does not reload behind the link.
         if (target?.closest(`[${BODY}] a[href], [${BODY}] button`))
             setOpen(root, false);
+    };
+    /* Typing in the search field. The event lets an app fetch results of
+       its own for the same query; dropdown only filters what is on the page. */
+    const onInput = (event) => {
+        if (live !== self)
+            return;
+        const input = event.target?.closest(`[${SEARCH}]`);
+        const root = input?.closest(`[${ROOT}]`);
+        if (!input || !root)
+            return;
+        filter(root);
+        root.dispatchEvent(new CustomEvent("pg-dropdown-search", {
+            bubbles: true,
+            detail: { query: input.value },
+        }));
     };
     /* A scroll the user starts: wheel or finger outside the body, or a
        scrolling key outside a field or control. Inside the body it scrolls
@@ -405,6 +551,7 @@ export function initDropdown() {
     document.addEventListener("focusout", onFocusOut);
     document.addEventListener("wheel", onWheel, { passive: true });
     document.addEventListener("touchmove", onTouchMove, { passive: true });
+    document.addEventListener("input", onInput);
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onResize, { passive: true });
     // Markup that starts open (data-pg-dropdown-active="true").
@@ -420,6 +567,7 @@ export function initDropdown() {
         document.removeEventListener("focusout", onFocusOut);
         document.removeEventListener("wheel", onWheel);
         document.removeEventListener("touchmove", onTouchMove);
+        document.removeEventListener("input", onInput);
         window.removeEventListener("scroll", onScroll);
         window.removeEventListener("resize", onResize);
         if (live === self)
