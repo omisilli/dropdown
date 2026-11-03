@@ -210,6 +210,11 @@
             .push-end {
                 margin-left: auto;
             }
+            /* Wide enough that, at the container's right side, it has to open
+               leftwards even on a large screen. */
+            [data-pg-dropdown-body].wider {
+                width: 26rem;
+            }
             [data-pg-dropdown-body].tall {
                 max-height: none;
             }
@@ -323,12 +328,12 @@
             </p>
 
             <h2>Flip</h2>
-            <div class="row bleed">
+            <div class="row spread">
                 <div data-pg-dropdown data-pg-dropdown-active="false" data-pg-dropdown-flip>
                     <button type="button" data-pg-dropdown-head aria-expanded="false">
                         Left edge
                     </button>
-                    <div data-pg-dropdown-body class="wide">
+                    <div data-pg-dropdown-body class="wider">
                         <a href="#">Room on the right: opens rightwards</a>
                         <a href="#">Upwards near the bottom</a>
                         <a href="#">A popover in the top layer</a>
@@ -338,7 +343,7 @@
                     <button type="button" data-pg-dropdown-head aria-expanded="false">
                         Right edge
                     </button>
-                    <div data-pg-dropdown-body class="wide">
+                    <div data-pg-dropdown-body class="wider">
                         <a href="#">No room on the right: opens leftwards</a>
                         <a href="#">Upwards near the bottom</a>
                         <a href="#">A popover in the top layer</a>
