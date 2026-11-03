@@ -14,7 +14,7 @@ stylesheet, no dependencies, framework-agnostic.
 ```
 
 ```sh
-npm install github:omisilli/dropdown#v1.2.0
+npm install github:omisilli/dropdown#v1.3.0
 ```
 
 ```ts
@@ -36,16 +36,16 @@ Load both halves straight from jsDelivr — no install, and the page works
 when opened by double-clicking:
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/omisilli/dropdown@v1.2.0/index.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/omisilli/dropdown@v1.3.0/index.css" />
 
 <script type="module">
-    import { initDropdown } from "https://cdn.jsdelivr.net/gh/omisilli/dropdown@v1.2.0/dist/index.js";
+    import { initDropdown } from "https://cdn.jsdelivr.net/gh/omisilli/dropdown@v1.3.0/dist/index.js";
 
     initDropdown();
 </script>
 ```
 
-Pin the version (`@v1.2.0`) on a live site. A pinned URL never changes;
+Pin the version (`@v1.3.0`) on a live site. A pinned URL never changes;
 `@1` follows the newest 1.x release.
 
 ## Files
@@ -200,14 +200,57 @@ viewport. No parent can clip it (`overflow: hidden`) or trap it
 
 The gap (`--pg-dropdown-offset`) flips with the body.
 
+### Keeping clear of the screen's edges
+
+`--pg-dropdown-edge` is how close a flipped body may come to the edges of the
+screen. Default `0`. Set it like any CSS length — once on `:root`, on one
+container, and per screen size with media queries. Mobile first: a value set
+for phones holds on larger screens until a larger screen sets its own.
+
+```css
+:root {
+    --pg-dropdown-edge: 12px;
+}
+
+@media (width >= 48rem) {
+    :root {
+        --pg-dropdown-edge: 24px;
+    }
+}
+```
+
+With Tailwind, on one dropdown:
+`[--pg-dropdown-edge:12px] md:[--pg-dropdown-edge:24px]`.
+
+It is a CSS variable, not an attribute, so the package never has to know a
+theme's breakpoints.
+
+### When it fits nowhere
+
+- **Too wide** for the screen: the body is narrowed to the screen minus its
+  edges, and its lines wrap.
+- **Too tall** for either side: it opens on the side with more room, its
+  height is capped there, and the list scrolls inside. With `-flip="none"`
+  or `-flip="x"` it keeps its side and is capped there.
+
+Nothing is scaled down — only the box gets smaller. The browser's own
+placement cannot keep a preferred side and shrink only when nothing fits,
+so for that one opening dropdown measures and places the body itself.
+
 `data-pg-dropdown-side` and `data-pg-dropdown-align` report where it went.
 
 ## CSS
 
-`index.css` only places and shows the body: `position: absolute` below the
-head, hidden unless the container is active, its own scroll. Colours,
-borders, fonts and the exact offset are yours — set a `max-height` on the
-body to make a long list scroll.
+`index.css` only places and shows the body: where it goes, hidden unless the
+container is active, its own scroll. Colours, borders and fonts are yours —
+set a `max-height` on the body to make a long list scroll.
+
+Two lengths, both registered with `@property` so `1rem` or a `calc()` works:
+
+| Variable               | Default | Meaning                                             |
+| ---------------------- | ------- | --------------------------------------------------- |
+| `--pg-dropdown-offset` | `0px`   | Gap between head and body, on the side facing it    |
+| `--pg-dropdown-edge`   | `0px`   | With flip: how close the body may come to the edges |
 
 With a smooth-scrolling library that hijacks the wheel (Lenis), mark the
 body so the library leaves it alone — for Lenis, `data-lenis-prevent`.

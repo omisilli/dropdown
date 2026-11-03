@@ -18,13 +18,16 @@ export function Example() {
         <>
             <Dropdowns />
 
-            {/* data-pg-dropdown-flip: opens upwards or leftwards when there is no room. */}
+            {/* Centred under the head, flipped only up or down, kept 12px from the
+                screen's edges on phones and 24px from md up. Closes after 40px of the
+                user's own scrolling. */}
             <div
                 data-pg-dropdown
                 data-pg-dropdown-active="false"
-                data-pg-dropdown-flip
+                data-pg-dropdown-flip="y"
+                data-pg-dropdown-x="center"
                 data-pg-dropdown-scroll-threshold={40}
-                className="group"
+                className="group [--pg-dropdown-edge:12px] md:[--pg-dropdown-edge:24px]"
             >
                 <button
                     type="button"
@@ -34,7 +37,10 @@ export function Example() {
                 >
                     Language
                 </button>
-                <div data-pg-dropdown-body className="mt-1 max-h-60 rounded border bg-white shadow">
+                <div
+                    data-pg-dropdown-body
+                    className="max-h-60 rounded border bg-white shadow [--pg-dropdown-offset:0.25rem]"
+                >
                     {languages.map((language) => (
                         <a key={language} href="#" className="block px-3 py-2 hover:bg-neutral-100">
                             {language}

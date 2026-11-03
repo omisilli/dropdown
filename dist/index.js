@@ -101,53 +101,105 @@ function recordSide(root, head, body) {
             ? "start"
             : "end");
 }
-/* placeFixed — fallback for browsers without anchor positioning: measure,
-   honour the wishes, turn on the allowed axes when there is no room, write
-   fixed coordinates. The gap moves to the side facing the head, as the
-   browser's own flip-block would move it. */
+/* Lengths from index.css. Registered with @property, so the browser has
+   already turned 1rem, a media query's value or calc() into pixels. */
+function lengthOf(css, name) {
+    return parseFloat(css.getPropertyValue(name)) || 0;
+}
+/* The inline styles placeFixed writes, and the ones that switch the
+   browser's own placement off for a body it could not fit. */
+const MEASURED = [
+    "top",
+    "bottom",
+    "left",
+    "right",
+    "margin-top",
+    "margin-bottom",
+    "margin-left",
+    "margin-right",
+    "max-height",
+    "position-area",
+    "position-try-fallbacks",
+    "justify-self",
+];
+function clearMeasured(body) {
+    for (const property of MEASURED)
+        body.style.removeProperty(property);
+}
+/* Does the body stay --pg-dropdown-edge inside the screen? Half a pixel of
+   slack for sub-pixel layout. */
+function fitsScreen(body) {
+    const edge = lengthOf(getComputedStyle(body), "--pg-dropdown-edge") - 0.5;
+    const b = body.getBoundingClientRect();
+    return (b.top >= edge &&
+        b.left >= edge &&
+        b.bottom <= innerHeight - edge &&
+        b.right <= innerWidth - edge);
+}
+/* placeFixed — measure, honour the wishes, turn on the allowed axes when
+   there is no room, write fixed coordinates. Two callers:
+     - browsers without anchor positioning, for every opening;
+     - any browser, when the body fits on neither side: CSS cannot both keep
+       the preferred side and shrink only when nothing fits.
+   Stays --pg-dropdown-edge inside the screen. When the body is taller than
+   the room, it goes to the side with more room and its height is capped —
+   the list scrolls inside. Nothing is scaled down. */
 function placeFixed(root, head, body) {
+    clearMeasured(body);
     const s = body.style;
-    s.top = s.bottom = s.left = s.right = s.marginTop = s.marginBottom = "";
+    // The browser's own placement off, so these coordinates are the only ones.
+    s.setProperty("position-area", "none");
+    s.setProperty("position-try-fallbacks", "none");
+    s.setProperty("justify-self", "auto");
     const { x, y, flipX, flipY } = placementOf(root);
     const css = getComputedStyle(body);
+    const edge = lengthOf(css, "--pg-dropdown-edge");
     const gap = parseFloat(y === "top" ? css.marginBottom : css.marginTop) || 0;
     const h = head.getBoundingClientRect();
-    const height = body.offsetHeight + gap;
-    const width = body.offsetWidth;
-    const roomBelow = innerHeight - h.bottom;
-    const roomAbove = h.top;
+    const height = body.offsetHeight;
+    const width = Math.min(body.offsetWidth, innerWidth - 2 * edge);
+    // Vertical: the preferred side, the other one if allowed and roomier.
+    const roomBelow = innerHeight - h.bottom - gap - edge;
+    const roomAbove = h.top - gap - edge;
     let up = y === "top";
-    if (flipY && up && height > roomAbove && roomBelow > roomAbove)
-        up = false;
-    else if (flipY && !up && height > roomBelow && roomAbove > roomBelow)
-        up = true;
-    if (up) {
+    if (flipY && height > (up ? roomAbove : roomBelow)) {
+        if ((up ? roomBelow : roomAbove) > (up ? roomAbove : roomBelow))
+            up = !up;
+    }
+    const room = Math.max(0, up ? roomAbove : roomBelow);
+    if (height > room)
+        s.maxHeight = `${room}px`;
+    s.marginTop = up ? "0" : `${gap}px`;
+    s.marginBottom = up ? `${gap}px` : "0";
+    if (up)
         s.bottom = `${innerHeight - h.top}px`;
-        s.marginTop = "0";
-        s.marginBottom = `${gap}px`;
-    }
-    else {
+    else
         s.top = `${h.bottom}px`;
-        s.marginTop = `${gap}px`;
-        s.marginBottom = "0";
-    }
+    // Horizontal: lined up as asked, flipped if allowed, then pushed back on
+    // screen if it still sticks out. Margins off — the edge is counted here.
+    s.marginLeft = s.marginRight = "0";
+    const clamp = (left) => Math.min(Math.max(edge, left), innerWidth - edge - width);
     let align = x;
+    let left;
     if (x === "center") {
-        const centred = h.left + h.width / 2 - width / 2;
-        s.left = `${Math.min(Math.max(0, centred), innerWidth - width)}px`;
+        left = clamp(h.left + h.width / 2 - width / 2);
     }
     else {
-        if (flipX && x === "start" && h.left + width > innerWidth && h.right - width >= 0) {
-            align = "end";
+        const startLeft = h.left;
+        const endLeft = h.right - width;
+        // How far a left position would stick out past the edges.
+        const overflow = (l) => Math.max(0, edge - l) + Math.max(0, l + width - (innerWidth - edge));
+        const asked = align === "end" ? endLeft : startLeft;
+        const other = align === "end" ? startLeft : endLeft;
+        // Flip when the other side sticks out less — not only when it fits
+        // outright: a head inside the edge zone fits neither way, and the
+        // body should still lean the way it overflows least.
+        if (flipX && overflow(asked) > 0 && overflow(other) < overflow(asked)) {
+            align = align === "end" ? "start" : "end";
         }
-        else if (flipX && x === "end" && h.right - width < 0 && h.left + width <= innerWidth) {
-            align = "start";
-        }
-        if (align === "end")
-            s.right = `${innerWidth - h.right}px`;
-        else
-            s.left = `${h.left}px`;
+        left = clamp(align === "end" ? endLeft : startLeft);
     }
+    s.left = `${left}px`;
     root.setAttribute(SIDE, up ? "top" : "bottom");
     root.setAttribute(ALIGN, align);
 }
@@ -167,6 +219,8 @@ export function initDropdown() {
        phone's fling), the address bar folding away, or the browser scrolling
        a focused link into view do not. The old code tried a 300ms guard. */
     let opened = null;
+    /* Bodies the browser could not fit, placed by measuring this time. */
+    const measured = new WeakSet();
     const float = (root) => {
         const head = headOf(root);
         const body = bodyOf(root);
@@ -180,7 +234,16 @@ export function initDropdown() {
             head.style.setProperty("anchor-name", name);
             body.style.setProperty("position-anchor", name);
             body.showPopover();
-            requestAnimationFrame(() => recordSide(root, head, body));
+            // The browser placed it. If it still does not fit — too tall
+            // for either side, too wide — measure it instead, this time.
+            requestAnimationFrame(() => {
+                if (fitsScreen(body))
+                    recordSide(root, head, body);
+                else {
+                    measured.add(body);
+                    placeFixed(root, head, body);
+                }
+            });
         }
         else {
             body.showPopover();
@@ -189,8 +252,14 @@ export function initDropdown() {
     };
     const sink = (root) => {
         const body = bodyOf(root);
-        if (body?.hasAttribute("popover") && body.matches(":popover-open"))
+        if (!body?.hasAttribute("popover"))
+            return;
+        if (body.matches(":popover-open"))
             body.hidePopover();
+        // Next opening starts over: the browser places it again if it can.
+        if (canAnchor())
+            clearMeasured(body);
+        measured.delete(body);
     };
     const setOpen = (root, open) => {
         if (isOpen(root) === open)
@@ -301,12 +370,13 @@ export function initDropdown() {
        still moves, and when the window is resized. Never closes on resize —
        phones resize when the address bar moves. */
     const replace = () => {
-        if (!opened || !floats(opened.root) || canAnchor())
+        if (!opened || !floats(opened.root))
             return;
         const head = headOf(opened.root);
         const body = bodyOf(opened.root);
-        if (head && body)
+        if (head && body && (!canAnchor() || measured.has(body))) {
             placeFixed(opened.root, head, body);
+        }
     };
     /* The page scrolling closes it — like a native <select> — but only a
        scroll the user started, and only past the threshold (default 0).

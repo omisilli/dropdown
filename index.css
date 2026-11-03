@@ -2,10 +2,29 @@
  * dropdown — the CSS half: where the body sits, when it shows, how its
  * list scrolls. Colours, borders, fonts belong to the theme.
  *
- * The gap between head and body: set --pg-dropdown-offset on the body. It
- * lands on the side facing the head, whichever way the body opens. A plain
- * margin-top still works for a body that only ever opens downwards.
+ * Two lengths, set anywhere above the body — :root, the container, the
+ * body — and changed per screen size with media queries like any CSS:
+ *   --pg-dropdown-offset   the gap between head and body, on the side facing
+ *                          the head whichever way it opens. A plain
+ *                          margin-top still works for a body that only ever
+ *                          opens downwards.
+ *   --pg-dropdown-edge     with data-pg-dropdown-flip: how close the body may
+ *                          come to the edges of the screen. Default 0.
  */
+
+/* Registered as lengths so the browser resolves 1rem, 2vw, calc() to
+   pixels — index.ts reads them back when it measures. */
+@property --pg-dropdown-offset {
+    syntax: "<length>";
+    inherits: true;
+    initial-value: 0px;
+}
+
+@property --pg-dropdown-edge {
+    syntax: "<length>";
+    inherits: true;
+    initial-value: 0px;
+}
 
 [data-pg-dropdown] {
     position: relative;
@@ -69,12 +88,38 @@
    Normal weight, not :where(): a page-wide reset such as * { margin: 0 }
    must not erase it, while the page's own rule for the body still wins. */
 [data-pg-dropdown-body] {
-    margin-top: var(--pg-dropdown-offset, 0px);
+    margin-top: var(--pg-dropdown-offset);
 }
 
 [data-pg-dropdown-y="top"] [data-pg-dropdown-body] {
     margin-top: 0;
-    margin-bottom: var(--pg-dropdown-offset, 0px);
+    margin-bottom: var(--pg-dropdown-offset);
+}
+
+/* data-pg-dropdown-flip keeps the body --pg-dropdown-edge away from the
+   screen's edges. The space goes on the sides facing away from the head —
+   the browser's flips swap margins, so it follows the body. Never wider
+   than the screen allows; a body that still fits nowhere is measured and
+   shrunk by index.ts. */
+[data-pg-dropdown-body][popover] {
+    margin-bottom: var(--pg-dropdown-edge);
+    margin-right: var(--pg-dropdown-edge);
+    max-width: calc(100vw - 2 * var(--pg-dropdown-edge));
+}
+
+[data-pg-dropdown-y="top"] [data-pg-dropdown-body][popover] {
+    margin-top: var(--pg-dropdown-edge);
+    margin-bottom: var(--pg-dropdown-offset);
+}
+
+[data-pg-dropdown-x="end"] [data-pg-dropdown-body][popover] {
+    margin-right: 0;
+    margin-left: var(--pg-dropdown-edge);
+}
+
+[data-pg-dropdown-x="center"] [data-pg-dropdown-body][popover] {
+    margin-left: var(--pg-dropdown-edge);
+    margin-right: var(--pg-dropdown-edge);
 }
 
 /* Where anchor positioning exists, the browser places and flips the body.

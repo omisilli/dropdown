@@ -1,11 +1,15 @@
 <!doctype html>
-<!-- Open by double-clicking: both halves load from jsDelivr, not from ../.. -->
+<!-- Open by double-clicking: both halves load from jsDelivr, not from ../..
+     Pinned to this release, so the page and the code always match. -->
 <html lang="en">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>dropdown — example</title>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/omisilli/dropdown@1/index.css" />
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/gh/omisilli/dropdown@v1.3.0/index.css"
+        />
         <style>
             :root {
                 --bg: #f6f6f4;
@@ -17,6 +21,15 @@
                 --accent: #2f5bea;
                 --shadow: 0 12px 32px rgb(0 0 0 / 0.12);
                 color-scheme: light dark;
+
+                /* Flipped bodies keep this far from the screen's edges:
+                   12px on phones, 24px from 48rem up. */
+                --pg-dropdown-edge: 12px;
+            }
+            @media (width >= 48rem) {
+                :root {
+                    --pg-dropdown-edge: 24px;
+                }
             }
             @media (prefers-color-scheme: dark) {
                 :root {
@@ -174,15 +187,39 @@
                 color: var(--muted);
                 font-size: 0.9rem;
             }
-            .flip-row {
+            .wide {
+                width: 18rem;
+            }
+            /* A row that runs to the screen's edges, to show what happens there. */
+            .bleed {
+                width: 100vw;
+                margin-left: calc(50% - 50vw);
+                padding: 1rem 0.5rem;
+                border-radius: 0;
                 justify-content: space-between;
             }
-            .axes-row {
+            .spread {
+                flex-wrap: wrap;
                 justify-content: space-between;
                 align-items: flex-start;
             }
-            .wide {
-                width: 18rem;
+            .wrap {
+                flex-wrap: wrap;
+            }
+            /* Stays on the right even when the row wraps on a phone. */
+            .push-end {
+                margin-left: auto;
+            }
+            [data-pg-dropdown-body].tall {
+                max-height: none;
+            }
+            [data-pg-dropdown-body].huge {
+                width: 1600px;
+            }
+            .note {
+                margin-top: 0.6rem;
+                color: var(--muted);
+                font-size: 0.9rem;
             }
             .tips li {
                 margin: 0.4rem 0 0 1.25rem;
@@ -246,27 +283,76 @@
                 <p>Buttons inside the body work like links: pick one and it closes.</p>
             </div>
 
+            <h2>Placing</h2>
+            <div class="row wrap">
+                <div data-pg-dropdown data-pg-dropdown-active="false" data-pg-dropdown-y="top">
+                    <button type="button" data-pg-dropdown-head aria-expanded="false">
+                        y="top"
+                    </button>
+                    <div data-pg-dropdown-body>
+                        <a href="#">Above the head</a>
+                        <a href="#">without flipping</a>
+                    </div>
+                </div>
+                <div data-pg-dropdown data-pg-dropdown-active="false" data-pg-dropdown-x="center">
+                    <button type="button" data-pg-dropdown-head aria-expanded="false">
+                        x="center"
+                    </button>
+                    <div data-pg-dropdown-body>
+                        <a href="#">Centred under the head</a>
+                    </div>
+                </div>
+                <div
+                    class="push-end"
+                    data-pg-dropdown
+                    data-pg-dropdown-active="false"
+                    data-pg-dropdown-x="end"
+                >
+                    <button type="button" data-pg-dropdown-head aria-expanded="false">
+                        x="end"
+                    </button>
+                    <div data-pg-dropdown-body>
+                        <a href="#">Lined up with the head's right edge</a>
+                    </div>
+                </div>
+            </div>
+            <p class="note">
+                <code>data-pg-dropdown-y</code> and <code>-x</code> work without flipping too: the
+                body stays inside its container and goes exactly where it is told. Without flip it
+                does not watch the screen — near an edge it can run off, so use flip there.
+            </p>
+
             <h2>Flip</h2>
-            <div class="row flip-row">
-                <p>
-                    <code>data-pg-dropdown-flip</code> opens where there is room. Scroll until this
-                    row sits near the bottom of the screen, then open it: it opens upwards. On a
-                    narrow screen, with no room on the right, it also opens leftwards.
-                </p>
+            <div class="row bleed">
                 <div data-pg-dropdown data-pg-dropdown-active="false" data-pg-dropdown-flip>
-                    <button type="button" data-pg-dropdown-head aria-expanded="false">Flip</button>
+                    <button type="button" data-pg-dropdown-head aria-expanded="false">
+                        Left edge
+                    </button>
                     <div data-pg-dropdown-body class="wide">
-                        <a href="#">Opens where there is room</a>
+                        <a href="#">Room on the right: opens rightwards</a>
                         <a href="#">Upwards near the bottom</a>
-                        <a href="#">Leftwards near the right edge</a>
-                        <a href="#">Never clipped by a parent</a>
+                        <a href="#">A popover in the top layer</a>
+                    </div>
+                </div>
+                <div data-pg-dropdown data-pg-dropdown-active="false" data-pg-dropdown-flip>
+                    <button type="button" data-pg-dropdown-head aria-expanded="false">
+                        Right edge
+                    </button>
+                    <div data-pg-dropdown-body class="wide">
+                        <a href="#">No room on the right: opens leftwards</a>
+                        <a href="#">Upwards near the bottom</a>
                         <a href="#">A popover in the top layer</a>
                     </div>
                 </div>
             </div>
+            <p class="note">
+                <code>data-pg-dropdown-flip</code> moves the body when there is no room. Scroll
+                until this row sits near the bottom of the screen and open them again: they open
+                upwards.
+            </p>
 
             <h2>Per axis</h2>
-            <div class="row axes-row">
+            <div class="row spread">
                 <div
                     data-pg-dropdown
                     data-pg-dropdown-active="false"
@@ -295,14 +381,96 @@
                         <a href="#">Centred under its head</a>
                         <a href="#">Upwards near the bottom</a>
                         <a href="#">Never flipped sideways</a>
-                        <a href="#">Pushed back on screen at an edge</a>
                     </div>
                 </div>
-                <p>
-                    <code>data-pg-dropdown-y</code>, <code>-x</code> and <code>-flip="y"</code>:
-                    each axis is its own choice.
-                </p>
+                <div
+                    data-pg-dropdown
+                    data-pg-dropdown-active="false"
+                    data-pg-dropdown-flip="none"
+                    data-pg-dropdown-y="top"
+                >
+                    <button type="button" data-pg-dropdown-head aria-expanded="false">
+                        flip="none"
+                    </button>
+                    <div data-pg-dropdown-body>
+                        <a href="#">Always above</a>
+                        <a href="#">never flipped</a>
+                        <a href="#">but still on screen</a>
+                    </div>
+                </div>
             </div>
+            <p class="note">
+                Each axis is its own choice: <code>-flip="y"</code> only moves up or down,
+                <code>-flip="x"</code> only sideways, <code>-flip="none"</code> never — the body
+                still floats above everything and stays on screen.
+            </p>
+
+            <h2>Screen edge</h2>
+            <div class="row bleed">
+                <span></span>
+                <div
+                    data-pg-dropdown
+                    data-pg-dropdown-active="false"
+                    data-pg-dropdown-flip="y"
+                    data-pg-dropdown-x="center"
+                >
+                    <button type="button" data-pg-dropdown-head aria-expanded="false">
+                        Centred at the edge
+                    </button>
+                    <div data-pg-dropdown-body class="wide">
+                        <a href="#">Pushed back on screen,</a>
+                        <a href="#">and kept 12px from the edge</a>
+                        <a href="#">on a phone, 24px from 48rem</a>
+                    </div>
+                </div>
+            </div>
+            <p class="note">
+                This page sets <code>--pg-dropdown-edge: 12px</code> on <code>:root</code> and
+                <code>24px</code> from <code>48rem</code> up — mobile first, like any CSS. Flipped
+                bodies never come closer to the screen's edges than that.
+            </p>
+
+            <h2>When it fits nowhere</h2>
+            <div class="row spread">
+                <div data-pg-dropdown data-pg-dropdown-active="false" data-pg-dropdown-flip>
+                    <button type="button" data-pg-dropdown-head aria-expanded="false">
+                        30 items
+                    </button>
+                    <div data-pg-dropdown-body class="tall">
+                        <a href="#">Item 1</a><a href="#">Item 2</a><a href="#">Item 3</a>
+                        <a href="#">Item 4</a><a href="#">Item 5</a><a href="#">Item 6</a>
+                        <a href="#">Item 7</a><a href="#">Item 8</a><a href="#">Item 9</a>
+                        <a href="#">Item 10</a><a href="#">Item 11</a><a href="#">Item 12</a>
+                        <a href="#">Item 13</a><a href="#">Item 14</a><a href="#">Item 15</a>
+                        <a href="#">Item 16</a><a href="#">Item 17</a><a href="#">Item 18</a>
+                        <a href="#">Item 19</a><a href="#">Item 20</a><a href="#">Item 21</a>
+                        <a href="#">Item 22</a><a href="#">Item 23</a><a href="#">Item 24</a>
+                        <a href="#">Item 25</a><a href="#">Item 26</a><a href="#">Item 27</a>
+                        <a href="#">Item 28</a><a href="#">Item 29</a><a href="#">Item 30</a>
+                    </div>
+                </div>
+                <div
+                    data-pg-dropdown
+                    data-pg-dropdown-active="false"
+                    data-pg-dropdown-flip
+                    data-pg-dropdown-x="center"
+                >
+                    <button type="button" data-pg-dropdown-head aria-expanded="false">
+                        1600px wide
+                    </button>
+                    <div data-pg-dropdown-body class="huge">
+                        <a href="#"
+                            >This body asks for 1600px. It is narrowed to the screen minus its
+                            edges, so its lines wrap instead of running off the page.</a
+                        >
+                    </div>
+                </div>
+            </div>
+            <p class="note">
+                Too tall for either side: it opens on the side with more room, its height is capped
+                there and the list scrolls inside. Too wide: it is narrowed to fit. Nothing is
+                scaled down.
+            </p>
 
             <h2>Scroll threshold</h2>
             <div class="row">
@@ -343,7 +511,7 @@
         </main>
 
         <script type="module">
-            import { initDropdown } from "https://cdn.jsdelivr.net/gh/omisilli/dropdown@1/dist/index.js";
+            import { initDropdown } from "https://cdn.jsdelivr.net/gh/omisilli/dropdown@v1.3.0/dist/index.js";
 
             initDropdown();
 
