@@ -18,7 +18,14 @@ export function Example() {
         <>
             <Dropdowns />
 
-            <div data-pg-dropdown data-pg-dropdown-active="false" className="group">
+            {/* data-pg-dropdown-flip: opens upwards or leftwards when there is no room. */}
+            <div
+                data-pg-dropdown
+                data-pg-dropdown-active="false"
+                data-pg-dropdown-flip
+                data-pg-dropdown-scroll-threshold={40}
+                className="group"
+            >
                 <button
                     type="button"
                     data-pg-dropdown-head

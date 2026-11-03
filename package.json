@@ -1,6 +1,6 @@
 {
     "name": "@plusguard/dropdown",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "A head that opens a body, from HTML attributes. Closes on an outside press, Escape, focus leaving and page scroll; one open at a time. Zero dependencies, framework-agnostic, accessible. CSS included.",
     "type": "module",
     "main": "./dist/index.js",

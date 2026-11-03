@@ -24,3 +24,36 @@
 [data-pg-dropdown]:not([data-pg-dropdown-active="true"]) [data-pg-dropdown-body] {
     display: none;
 }
+
+/* data-pg-dropdown-flip: the body is a popover in the top layer, placed
+   against the viewport, so no ancestor can clip or trap it. This placement
+   has to beat the rule for a plain body above. */
+[data-pg-dropdown-body][popover] {
+    position: fixed;
+    inset: auto;
+}
+
+/* Undo the browser's own popover box. :where() gives this no weight at all,
+   so the page's own [data-pg-dropdown-body] { … } still decides margin,
+   padding, border and colours — without it, these resets outranked the
+   page and a flipped body lost its look. */
+:where([data-pg-dropdown-body][popover]) {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    color: inherit;
+    background: transparent;
+}
+
+/* Where anchor positioning exists, the browser places and flips it.
+   Elsewhere index.ts measures and writes the coordinates instead. */
+@supports (anchor-name: --a) and (position-try-fallbacks: flip-block) {
+    [data-pg-dropdown-body][popover] {
+        top: anchor(bottom);
+        left: anchor(left);
+        position-try-fallbacks:
+            flip-block,
+            flip-inline,
+            flip-block flip-inline;
+    }
+}

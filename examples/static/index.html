@@ -69,6 +69,9 @@
                 border-radius: 0.6rem;
                 background: var(--surface);
             }
+            [data-pg-dropdown-head] {
+                white-space: nowrap;
+            }
             [data-pg-dropdown-head]::after {
                 content: "▾";
                 font-size: 0.75em;
@@ -170,6 +173,12 @@
                 color: var(--muted);
                 font-size: 0.9rem;
             }
+            .flip-row {
+                justify-content: space-between;
+            }
+            .wide {
+                width: 18rem;
+            }
             .tips li {
                 margin: 0.4rem 0 0 1.25rem;
                 color: var(--muted);
@@ -180,7 +189,9 @@
         <header class="bar">
             <strong>dropdown</strong>
             <div class="group">
-                <div class="end" data-pg-dropdown data-pg-dropdown-active="false">
+                <!-- flip: the body leaves the blurred sticky bar for the top layer, and
+                     opens leftwards on its own when there is no room on the right. -->
+                <div data-pg-dropdown data-pg-dropdown-active="false" data-pg-dropdown-flip>
                     <button type="button" data-pg-dropdown-head aria-expanded="false">
                         English
                     </button>
@@ -230,11 +241,56 @@
                 <p>Buttons inside the body work like links: pick one and it closes.</p>
             </div>
 
+            <h2>Flip</h2>
+            <div class="row flip-row">
+                <p>
+                    <code>data-pg-dropdown-flip</code> opens where there is room. Scroll until this
+                    row sits near the bottom of the screen, then open it: it opens upwards. On a
+                    narrow screen, with no room on the right, it also opens leftwards.
+                </p>
+                <div data-pg-dropdown data-pg-dropdown-active="false" data-pg-dropdown-flip>
+                    <button type="button" data-pg-dropdown-head aria-expanded="false">Flip</button>
+                    <div data-pg-dropdown-body class="wide">
+                        <a href="#">Opens where there is room</a>
+                        <a href="#">Upwards near the bottom</a>
+                        <a href="#">Leftwards near the right edge</a>
+                        <a href="#">Never clipped by a parent</a>
+                        <a href="#">A popover in the top layer</a>
+                    </div>
+                </div>
+            </div>
+
+            <h2>Scroll threshold</h2>
+            <div class="row">
+                <div
+                    data-pg-dropdown
+                    data-pg-dropdown-active="false"
+                    data-pg-dropdown-scroll-threshold="40"
+                >
+                    <button type="button" data-pg-dropdown-head aria-expanded="false">
+                        Threshold 40
+                    </button>
+                    <div data-pg-dropdown-body>
+                        <a href="#">Scroll the page a little:</a>
+                        <a href="#">it stays open</a>
+                        <a href="#">until you pass 40px</a>
+                    </div>
+                </div>
+                <p>
+                    <code>data-pg-dropdown-scroll-threshold="40"</code> — without it, any scroll you
+                    start closes the dropdown.
+                </p>
+            </div>
+
             <h2>Things to try</h2>
             <ul class="tips">
                 <li>Open one, then the other — only one stays open.</li>
                 <li>Scroll the language list: the page stays put and the list stays open.</li>
                 <li>Scroll the page, press outside, or hit <kbd>Esc</kbd> — it closes.</li>
+                <li>
+                    Open the language list in the bar: it escapes the blurred bar and stays on
+                    screen at the right edge.
+                </li>
                 <li>
                     Tab to a head, open it with <kbd>Enter</kbd>, tab through the links — tabbing
                     past the last one closes it.

@@ -14,7 +14,7 @@ stylesheet, no dependencies, framework-agnostic.
 ```
 
 ```sh
-npm install github:omisilli/dropdown#v1.0.0
+npm install github:omisilli/dropdown#v1.1.0
 ```
 
 ```ts
@@ -36,16 +36,16 @@ Load both halves straight from jsDelivr — no install, and the page works
 when opened by double-clicking:
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/omisilli/dropdown@v1.0.0/index.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/omisilli/dropdown@v1.1.0/index.css" />
 
 <script type="module">
-    import { initDropdown } from "https://cdn.jsdelivr.net/gh/omisilli/dropdown@v1.0.0/dist/index.js";
+    import { initDropdown } from "https://cdn.jsdelivr.net/gh/omisilli/dropdown@v1.1.0/dist/index.js";
 
     initDropdown();
 </script>
 ```
 
-Pin the version (`@v1.0.0`) on a live site. A pinned URL never changes;
+Pin the version (`@v1.1.0`) on a live site. A pinned URL never changes;
 `@1` follows the newest 1.x release.
 
 ## Files
@@ -75,6 +75,21 @@ npx -p typescript tsc index.ts --outDir dist --declaration --target es2020 --mod
 | `data-pg-dropdown-body`   | body      | What opens                                             |
 | `data-pg-dropdown-active` | container | `"true"` or `"false"` — the state, written by dropdown |
 
+Options, on the container:
+
+| Attribute                           | Meaning                                                   |
+| ----------------------------------- | --------------------------------------------------------- |
+| `data-pg-dropdown-flip`             | Open where there is room — see [Flipping](#flipping)      |
+| `data-pg-dropdown-scroll-threshold` | Pixels the user must scroll before it closes. Default `0` |
+
+Written by dropdown when it flips, for themes that point an arrow or a
+shadow:
+
+| Attribute                | Values           |
+| ------------------------ | ---------------- |
+| `data-pg-dropdown-side`  | `bottom` · `top` |
+| `data-pg-dropdown-align` | `start` · `end`  |
+
 Every attribute starts with `data-pg-dropdown`, so none of them can collide
 with another library's names.
 
@@ -98,7 +113,8 @@ It opens on a press of the head, and closes on:
 - a link or button chosen inside the body
 - **Escape** — focus goes back to the head
 - **focus leaving it** — tabbing past the last link
-- **the page scrolling**, like a native `<select>`
+- **a scroll the user starts**, like a native `<select>` — past
+  `data-pg-dropdown-scroll-threshold` pixels if set
 
 One is open at a time: opening another closes the first. Pressing inside
 the body — its scrollbar, the space between links — keeps it open.
@@ -106,10 +122,39 @@ the body — its scrollbar, the space between links — keeps it open.
 It does not lock the page. Scrolling the body's own list does not close it
 or move the page (`overscroll-behavior: contain` in `index.css`).
 
+Only a scroll the **user** starts closes it — a wheel or a finger outside
+the body, or a scrolling key (Page Down, arrows, space) outside a field.
+The page moving on its own does not: momentum still running from before
+(a phone's fling, a smooth-scrolling library), the address bar folding
+away on a phone, or the browser scrolling a focused link into view.
+
 It reacts to `pointerdown`, not `click`: during momentum scrolling a
 browser can drop the click, while `pointerdown` fires the moment the
 pointer goes down. Keyboard presses on the head (Enter, Space) arrive as a
 click and are handled too.
+
+## Flipping
+
+`data-pg-dropdown-flip` opens the body where there is room: upwards near
+the bottom of the screen, leftwards near the right edge.
+
+```html
+<div data-pg-dropdown data-pg-dropdown-active="false" data-pg-dropdown-flip></div>
+```
+
+The body becomes a popover in the browser's top layer, placed against the
+viewport. No parent can clip it (`overflow: hidden`) or trap it
+(`transform`, `backdrop-filter` — a blurred sticky header, for one).
+
+- **Where the browser has CSS anchor positioning** (Chrome and Edge 125,
+  Safari 26, Firefox 147), it places and flips the body itself.
+- **Elsewhere** dropdown measures the room on opening, places the body with
+  fixed coordinates, and keeps it next to its head if the page moves.
+- **Without the Popover API** (browsers before 2024) the body stays where it
+  is and opens downwards, as without the attribute.
+
+Margins flip with the body: a `margin-top` gap below the head becomes a
+`margin-bottom` gap above it.
 
 ## CSS
 
