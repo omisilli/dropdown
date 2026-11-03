@@ -19,7 +19,13 @@
  * and the close-on-wheel fought each other and needed a 300ms guard.
  *
  * Options on the container:
- *   data-pg-dropdown-flip               open where there is room (see float)
+ *   data-pg-dropdown-y                  bottom | top — where it opens
+ *   data-pg-dropdown-x                  start | end | center — how it lines up
+ *   data-pg-dropdown-flip               move it when there is no room:
+ *                                         (no value) or "x y"  both axes
+ *                                         "y" · "x"            that axis only
+ *                                         "none"               never, but placed
+ *                                                              like a flip
  *   data-pg-dropdown-scroll-threshold   px the user must scroll to close it
  *
  * React: JSX sets the starting value (data-pg-dropdown-active="false") and
@@ -30,6 +36,8 @@ const ROOT = "data-pg-dropdown";
 const HEAD = "data-pg-dropdown-head";
 const BODY = "data-pg-dropdown-body";
 const ACTIVE = "data-pg-dropdown-active";
+const X = "data-pg-dropdown-x";
+const Y = "data-pg-dropdown-y";
 const FLIP = "data-pg-dropdown-flip";
 const SIDE = "data-pg-dropdown-side";
 const ALIGN = "data-pg-dropdown-align";
@@ -54,6 +62,7 @@ function canAnchor(): boolean {
     return (
         typeof CSS !== "undefined" &&
         CSS.supports("anchor-name: --a") &&
+        CSS.supports("position-area: bottom") &&
         CSS.supports("position-try-fallbacks: flip-block")
     );
 }
@@ -78,6 +87,30 @@ function floats(root: HTMLElement): boolean {
     return root.hasAttribute(FLIP) && canFloat();
 }
 
+type Placement = {
+    y: "bottom" | "top";
+    x: "start" | "end" | "center";
+    flipX: boolean;
+    flipY: boolean;
+};
+
+/* The container's wishes. A centred body never flips sideways — there is
+   no other side — it is pushed back on screen instead. */
+function placementOf(root: HTMLElement): Placement {
+    const y = root.getAttribute(Y) === "top" ? "top" : "bottom";
+    const xAttr = root.getAttribute(X);
+    const x = xAttr === "end" || xAttr === "center" ? xAttr : "start";
+
+    const flip = (root.getAttribute(FLIP) ?? "").trim().split(/\s+/).filter(Boolean);
+    const both = flip.length === 0;
+    return {
+        y,
+        x,
+        flipX: (both || flip.includes("x")) && x !== "center",
+        flipY: both || flip.includes("y"),
+    };
+}
+
 /* Where the body ended up, for themes that point an arrow or a shadow. */
 function recordSide(root: HTMLElement, head: HTMLElement, body: HTMLElement): void {
     const h = head.getBoundingClientRect();
@@ -85,43 +118,60 @@ function recordSide(root: HTMLElement, head: HTMLElement, body: HTMLElement): vo
     root.setAttribute(SIDE, b.top >= h.top ? "bottom" : "top");
     root.setAttribute(
         ALIGN,
-        Math.abs(b.left - h.left) <= Math.abs(b.right - h.right) ? "start" : "end",
+        placementOf(root).x === "center"
+            ? "center"
+            : Math.abs(b.left - h.left) <= Math.abs(b.right - h.right)
+              ? "start"
+              : "end",
     );
 }
 
 /* placeFixed — fallback for browsers without anchor positioning: measure,
-   pick the side with room, write fixed coordinates. Margins swap with the
-   side, as the browser's own flip-block / flip-inline would do. */
+   honour the wishes, turn on the allowed axes when there is no room, write
+   fixed coordinates. The gap moves to the side facing the head, as the
+   browser's own flip-block would move it. */
 function placeFixed(root: HTMLElement, head: HTMLElement, body: HTMLElement): void {
     const s = body.style;
-    s.top = s.bottom = s.left = s.right = s.margin = "";
+    s.top = s.bottom = s.left = s.right = s.marginTop = s.marginBottom = "";
+    const { x, y, flipX, flipY } = placementOf(root);
     const css = getComputedStyle(body);
+    const gap = parseFloat(y === "top" ? css.marginBottom : css.marginTop) || 0;
     const h = head.getBoundingClientRect();
-    const height = body.offsetHeight + parseFloat(css.marginTop);
-    const width = body.offsetWidth + parseFloat(css.marginLeft);
+    const height = body.offsetHeight + gap;
+    const width = body.offsetWidth;
 
     const roomBelow = innerHeight - h.bottom;
-    const up = height > roomBelow && h.top > roomBelow;
-    const end = h.left + width > innerWidth && h.right - width >= 0;
+    const roomAbove = h.top;
+    let up = y === "top";
+    if (flipY && up && height > roomAbove && roomBelow > roomAbove) up = false;
+    else if (flipY && !up && height > roomBelow && roomAbove > roomBelow) up = true;
 
     if (up) {
         s.bottom = `${innerHeight - h.top}px`;
-        s.marginBottom = css.marginTop;
         s.marginTop = "0";
+        s.marginBottom = `${gap}px`;
     } else {
         s.top = `${h.bottom}px`;
+        s.marginTop = `${gap}px`;
+        s.marginBottom = "0";
     }
 
-    if (end) {
-        s.right = `${innerWidth - h.right}px`;
-        s.marginRight = css.marginLeft;
-        s.marginLeft = "0";
+    let align: Placement["x"] = x;
+    if (x === "center") {
+        const centred = h.left + h.width / 2 - width / 2;
+        s.left = `${Math.min(Math.max(0, centred), innerWidth - width)}px`;
     } else {
-        s.left = `${h.left}px`;
+        if (flipX && x === "start" && h.left + width > innerWidth && h.right - width >= 0) {
+            align = "end";
+        } else if (flipX && x === "end" && h.right - width < 0 && h.left + width <= innerWidth) {
+            align = "start";
+        }
+        if (align === "end") s.right = `${innerWidth - h.right}px`;
+        else s.left = `${h.left}px`;
     }
 
     root.setAttribute(SIDE, up ? "top" : "bottom");
-    root.setAttribute(ALIGN, end ? "end" : "start");
+    root.setAttribute(ALIGN, align);
 }
 
 let anchors = 0;

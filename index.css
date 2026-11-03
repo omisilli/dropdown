@@ -1,7 +1,10 @@
 /*
  * dropdown — the CSS half: where the body sits, when it shows, how its
- * list scrolls. Colours, borders, fonts and the exact offset belong to the
- * theme.
+ * list scrolls. Colours, borders, fonts belong to the theme.
+ *
+ * The gap between head and body: set --pg-dropdown-offset on the body. It
+ * lands on the side facing the head, whichever way the body opens. A plain
+ * margin-top still works for a body that only ever opens downwards.
  */
 
 [data-pg-dropdown] {
@@ -19,6 +22,22 @@
     overscroll-behavior: contain;
 }
 
+/* data-pg-dropdown-y / -x on a body that does not flip. */
+[data-pg-dropdown-y="top"] [data-pg-dropdown-body] {
+    top: auto;
+    bottom: 100%;
+}
+
+[data-pg-dropdown-x="end"] [data-pg-dropdown-body] {
+    left: auto;
+    right: 0;
+}
+
+[data-pg-dropdown-x="center"] [data-pg-dropdown-body] {
+    left: 50%;
+    translate: -50% 0;
+}
+
 /* Closed unless the container says otherwise — also before JS runs, and
    when the attribute was left out of the markup. */
 [data-pg-dropdown]:not([data-pg-dropdown-active="true"]) [data-pg-dropdown-body] {
@@ -27,10 +46,11 @@
 
 /* data-pg-dropdown-flip: the body is a popover in the top layer, placed
    against the viewport, so no ancestor can clip or trap it. This placement
-   has to beat the rule for a plain body above. */
+   has to beat the rules above. */
 [data-pg-dropdown-body][popover] {
     position: fixed;
     inset: auto;
+    translate: none;
 }
 
 /* Undo the browser's own popover box. :where() gives this no weight at all,
@@ -45,15 +65,66 @@
     background: transparent;
 }
 
-/* Where anchor positioning exists, the browser places and flips it.
-   Elsewhere index.ts measures and writes the coordinates instead. */
-@supports (anchor-name: --a) and (position-try-fallbacks: flip-block) {
+/* The gap, on the side facing the head. Flipping moves it with the body.
+   Normal weight, not :where(): a page-wide reset such as * { margin: 0 }
+   must not erase it, while the page's own rule for the body still wins. */
+[data-pg-dropdown-body] {
+    margin-top: var(--pg-dropdown-offset, 0px);
+}
+
+[data-pg-dropdown-y="top"] [data-pg-dropdown-body] {
+    margin-top: 0;
+    margin-bottom: var(--pg-dropdown-offset, 0px);
+}
+
+/* Where anchor positioning exists, the browser places and flips the body.
+   position-area picks the cell around the head: "bottom span-right" is
+   below it, starting at its left edge. Elsewhere index.ts measures and
+   writes the coordinates instead. */
+@supports (position-area: bottom) and (position-try-fallbacks: flip-block) {
     [data-pg-dropdown-body][popover] {
-        top: anchor(bottom);
-        left: anchor(left);
+        position-area: bottom span-right;
         position-try-fallbacks:
             flip-block,
             flip-inline,
             flip-block flip-inline;
+    }
+
+    [data-pg-dropdown-x="end"] [data-pg-dropdown-body][popover] {
+        position-area: bottom span-left;
+    }
+
+    /* Centred: no sideways flip — anchor-center pushes it back on screen
+       at an edge instead. */
+    [data-pg-dropdown-x="center"] [data-pg-dropdown-body][popover] {
+        position-area: bottom;
+        justify-self: anchor-center;
+    }
+
+    [data-pg-dropdown-y="top"] [data-pg-dropdown-body][popover] {
+        position-area: top span-right;
+    }
+
+    [data-pg-dropdown-y="top"][data-pg-dropdown-x="end"] [data-pg-dropdown-body][popover] {
+        position-area: top span-left;
+    }
+
+    [data-pg-dropdown-y="top"][data-pg-dropdown-x="center"] [data-pg-dropdown-body][popover] {
+        position-area: top;
+    }
+
+    /* Which axes may flip: "y", "x", or "none". No value means both. */
+    [data-pg-dropdown-flip~="y"]:not([data-pg-dropdown-flip~="x"]) [data-pg-dropdown-body][popover],
+    [data-pg-dropdown-x="center"] [data-pg-dropdown-body][popover] {
+        position-try-fallbacks: flip-block;
+    }
+
+    [data-pg-dropdown-flip~="x"]:not([data-pg-dropdown-flip~="y"])
+        [data-pg-dropdown-body][popover] {
+        position-try-fallbacks: flip-inline;
+    }
+
+    [data-pg-dropdown-flip="none"] [data-pg-dropdown-body][popover] {
+        position-try-fallbacks: none;
     }
 }

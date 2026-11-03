@@ -84,7 +84,8 @@
                 rotate: 180deg;
             }
             [data-pg-dropdown-body] {
-                margin-top: 0.4rem;
+                /* The gap to the head — on whichever side the body opens. */
+                --pg-dropdown-offset: 0.4rem;
                 min-width: 11rem;
                 max-height: 15rem;
                 padding: 0.3rem;
@@ -176,6 +177,10 @@
             .flip-row {
                 justify-content: space-between;
             }
+            .axes-row {
+                justify-content: space-between;
+                align-items: flex-start;
+            }
             .wide {
                 width: 18rem;
             }
@@ -258,6 +263,45 @@
                         <a href="#">A popover in the top layer</a>
                     </div>
                 </div>
+            </div>
+
+            <h2>Per axis</h2>
+            <div class="row axes-row">
+                <div
+                    data-pg-dropdown
+                    data-pg-dropdown-active="false"
+                    data-pg-dropdown-flip="y"
+                    data-pg-dropdown-y="top"
+                >
+                    <button type="button" data-pg-dropdown-head aria-expanded="false">
+                        Prefers top
+                    </button>
+                    <div data-pg-dropdown-body>
+                        <a href="#">Opens upwards</a>
+                        <a href="#">comes down only</a>
+                        <a href="#">without room above</a>
+                    </div>
+                </div>
+                <div
+                    data-pg-dropdown
+                    data-pg-dropdown-active="false"
+                    data-pg-dropdown-flip="y"
+                    data-pg-dropdown-x="center"
+                >
+                    <button type="button" data-pg-dropdown-head aria-expanded="false">
+                        Centred · y only
+                    </button>
+                    <div data-pg-dropdown-body class="wide">
+                        <a href="#">Centred under its head</a>
+                        <a href="#">Upwards near the bottom</a>
+                        <a href="#">Never flipped sideways</a>
+                        <a href="#">Pushed back on screen at an edge</a>
+                    </div>
+                </div>
+                <p>
+                    <code>data-pg-dropdown-y</code>, <code>-x</code> and <code>-flip="y"</code>:
+                    each axis is its own choice.
+                </p>
             </div>
 
             <h2>Scroll threshold</h2>
