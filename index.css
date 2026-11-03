@@ -1,0 +1,26 @@
+/*
+ * dropdown — the CSS half: where the body sits, when it shows, how its
+ * list scrolls. Colours, borders, fonts and the exact offset belong to the
+ * theme.
+ */
+
+[data-pg-dropdown] {
+    position: relative;
+}
+
+[data-pg-dropdown-body] {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 10;
+    /* A long list scrolls inside itself, and reaching its end does not
+       carry on into the page. */
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+/* Closed unless the container says otherwise — also before JS runs, and
+   when the attribute was left out of the markup. */
+[data-pg-dropdown]:not([data-pg-dropdown-active="true"]) [data-pg-dropdown-body] {
+    display: none;
+}

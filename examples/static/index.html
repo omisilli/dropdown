@@ -1,0 +1,261 @@
+<!doctype html>
+<!-- Open by double-clicking: both halves load from jsDelivr, not from ../.. -->
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>dropdown — example</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/omisilli/dropdown@1/index.css" />
+        <style>
+            :root {
+                --bg: #f6f6f4;
+                --surface: #ffffff;
+                --fg: #18181b;
+                --muted: #6b6b72;
+                --line: #e4e4e0;
+                --hover: #f0f0ec;
+                --accent: #2f5bea;
+                --shadow: 0 12px 32px rgb(0 0 0 / 0.12);
+                color-scheme: light dark;
+            }
+            @media (prefers-color-scheme: dark) {
+                :root {
+                    --bg: #111113;
+                    --surface: #1b1b1f;
+                    --fg: #ededef;
+                    --muted: #9a9aa3;
+                    --line: #2c2c31;
+                    --hover: #26262b;
+                    --accent: #7c9cff;
+                    --shadow: 0 12px 32px rgb(0 0 0 / 0.5);
+                }
+            }
+
+            * {
+                box-sizing: border-box;
+                margin: 0;
+            }
+            body {
+                font:
+                    16px/1.6 system-ui,
+                    -apple-system,
+                    "Segoe UI",
+                    Roboto,
+                    sans-serif;
+                color: var(--fg);
+                background: var(--bg);
+            }
+            code {
+                font:
+                    0.85em/1.4 ui-monospace,
+                    SFMono-Regular,
+                    Menlo,
+                    monospace;
+                background: var(--hover);
+                padding: 0.15em 0.4em;
+                border-radius: 0.35em;
+            }
+
+            /* --- The dropdown's look: all of it is the page's, none the package's --- */
+            [data-pg-dropdown-head] {
+                font: inherit;
+                color: inherit;
+                cursor: pointer;
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.5rem 0.9rem;
+                border: 1px solid var(--line);
+                border-radius: 0.6rem;
+                background: var(--surface);
+            }
+            [data-pg-dropdown-head]::after {
+                content: "▾";
+                font-size: 0.75em;
+                transition: rotate 0.2s;
+            }
+            [data-pg-dropdown-active="true"] [data-pg-dropdown-head] {
+                border-color: var(--accent);
+            }
+            [data-pg-dropdown-active="true"] [data-pg-dropdown-head]::after {
+                rotate: 180deg;
+            }
+            [data-pg-dropdown-body] {
+                margin-top: 0.4rem;
+                min-width: 11rem;
+                max-height: 15rem;
+                padding: 0.3rem;
+                background: var(--surface);
+                border: 1px solid var(--line);
+                border-radius: 0.7rem;
+                box-shadow: var(--shadow);
+            }
+            /* Opens towards the left edge when it sits on the right. */
+            .end [data-pg-dropdown-body] {
+                left: auto;
+                right: 0;
+            }
+            [data-pg-dropdown-body] a,
+            [data-pg-dropdown-body] button {
+                display: block;
+                width: 100%;
+                padding: 0.5rem 0.7rem;
+                border: 0;
+                border-radius: 0.45rem;
+                background: none;
+                color: inherit;
+                font: inherit;
+                text-align: left;
+                text-decoration: none;
+                cursor: pointer;
+            }
+            [data-pg-dropdown-body] a:hover,
+            [data-pg-dropdown-body] button:hover,
+            [data-pg-dropdown-body] a:focus-visible,
+            [data-pg-dropdown-body] button:focus-visible {
+                background: var(--hover);
+                outline: none;
+            }
+
+            /* --- Page --- */
+            .bar {
+                position: sticky;
+                top: 0;
+                z-index: 20;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 1rem;
+                padding: 0.75rem 1.25rem;
+                background: color-mix(in srgb, var(--bg) 85%, transparent);
+                backdrop-filter: blur(10px);
+                border-bottom: 1px solid var(--line);
+            }
+            .bar strong {
+                letter-spacing: -0.01em;
+            }
+            .bar .group {
+                display: flex;
+                gap: 0.5rem;
+            }
+            main {
+                max-width: 46rem;
+                margin: 0 auto;
+                padding: 3rem 1.25rem 70vh;
+            }
+            h1 {
+                font-size: clamp(2rem, 6vw, 3rem);
+                line-height: 1.1;
+                letter-spacing: -0.03em;
+            }
+            h2 {
+                font-size: 1.1rem;
+                margin: 3rem 0 1rem;
+            }
+            .lead {
+                margin-top: 1rem;
+                color: var(--muted);
+                font-size: 1.1rem;
+            }
+            .row {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                padding: 1rem 1.25rem;
+                background: var(--surface);
+                border: 1px solid var(--line);
+                border-radius: 0.9rem;
+            }
+            .row p {
+                color: var(--muted);
+                font-size: 0.9rem;
+            }
+            .tips li {
+                margin: 0.4rem 0 0 1.25rem;
+                color: var(--muted);
+            }
+        </style>
+    </head>
+    <body>
+        <header class="bar">
+            <strong>dropdown</strong>
+            <div class="group">
+                <div class="end" data-pg-dropdown data-pg-dropdown-active="false">
+                    <button type="button" data-pg-dropdown-head aria-expanded="false">
+                        English
+                    </button>
+                    <div data-pg-dropdown-body>
+                        <a href="#">English</a>
+                        <a href="#">Türkçe</a>
+                        <a href="#">Deutsch</a>
+                        <a href="#">Français</a>
+                        <a href="#">Español</a>
+                        <a href="#">Italiano</a>
+                        <a href="#">Русский</a>
+                        <a href="#">العربية</a>
+                        <a href="#">日本語</a>
+                        <a href="#">中文</a>
+                    </div>
+                </div>
+                <div class="end" data-pg-dropdown data-pg-dropdown-active="false">
+                    <button type="button" data-pg-dropdown-head aria-expanded="false">EUR €</button>
+                    <div data-pg-dropdown-body>
+                        <a href="#">EUR €</a>
+                        <a href="#">USD $</a>
+                        <a href="#">TRY ₺</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <h1>A head that opens a body.</h1>
+            <p class="lead">
+                Plain HTML with four attributes. The package places and shows the body; everything
+                you see here — colours, the arrow, the shadow — is this page's own CSS.
+            </p>
+
+            <h2>Choosing closes it</h2>
+            <div class="row">
+                <div data-pg-dropdown data-pg-dropdown-active="false">
+                    <button type="button" data-pg-dropdown-head aria-expanded="false">
+                        Sort: newest
+                    </button>
+                    <div data-pg-dropdown-body>
+                        <button type="button" data-sort="newest">Newest</button>
+                        <button type="button" data-sort="price-asc">Price, low to high</button>
+                        <button type="button" data-sort="price-desc">Price, high to low</button>
+                    </div>
+                </div>
+                <p>Buttons inside the body work like links: pick one and it closes.</p>
+            </div>
+
+            <h2>Things to try</h2>
+            <ul class="tips">
+                <li>Open one, then the other — only one stays open.</li>
+                <li>Scroll the language list: the page stays put and the list stays open.</li>
+                <li>Scroll the page, press outside, or hit <kbd>Esc</kbd> — it closes.</li>
+                <li>
+                    Tab to a head, open it with <kbd>Enter</kbd>, tab through the links — tabbing
+                    past the last one closes it.
+                </li>
+            </ul>
+        </main>
+
+        <script type="module">
+            import { initDropdown } from "https://cdn.jsdelivr.net/gh/omisilli/dropdown@1/dist/index.js";
+
+            initDropdown();
+
+            // The page's own reaction to a choice — the package only closes the body.
+            document.addEventListener("click", (event) => {
+                const option = event.target.closest("[data-sort]");
+                if (!option) return;
+                const head = option
+                    .closest("[data-pg-dropdown]")
+                    .querySelector("[data-pg-dropdown-head]");
+                head.textContent = `Sort: ${option.textContent.toLowerCase()}`;
+            });
+        </script>
+    </body>
+</html>
