@@ -14,7 +14,7 @@ stylesheet, no dependencies, framework-agnostic.
 ```
 
 ```sh
-npm install github:omisilli/dropdown#v1.4.0
+npm install github:omisilli/dropdown#v1.4.1
 ```
 
 ```ts
@@ -36,16 +36,16 @@ Load both halves straight from jsDelivr — no install, and the page works
 when opened by double-clicking:
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/omisilli/dropdown@v1.4.0/index.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/omisilli/dropdown@v1.4.1/index.css" />
 
 <script type="module">
-    import { initDropdown } from "https://cdn.jsdelivr.net/gh/omisilli/dropdown@v1.4.0/dist/index.js";
+    import { initDropdown } from "https://cdn.jsdelivr.net/gh/omisilli/dropdown@v1.4.1/dist/index.js";
 
     initDropdown();
 </script>
 ```
 
-Pin the version (`@v1.4.0`) on a live site. A pinned URL never changes;
+Pin the version (`@v1.4.1`) on a live site. A pinned URL never changes;
 `@1` follows the newest 1.x release.
 
 ## Files
@@ -129,6 +129,13 @@ the body, or a scrolling key (Page Down, arrows, space) outside a field.
 The page moving on its own does not: momentum still running from before
 (a phone's fling, a smooth-scrolling library), the address bar folding
 away on a phone, or the browser scrolling a focused link into view.
+
+A trackpad's momentum is the hard one: it goes on sending wheel events
+after the fingers have left it, and the browser does not tell them from a
+new stroke. So wheel events already arriving when the dropdown opens count
+as momentum and close nothing; once they pause for 150ms, the next one is
+the user's own. A dropdown pressed while the page still coasts — one in a
+sticky bar, say — stays open.
 
 It reacts to `pointerdown`, not `click`: during momentum scrolling a
 browser can drop the click, while `pointerdown` fires the moment the

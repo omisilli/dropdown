@@ -328,6 +328,15 @@ export function initDropdown() {
        phone's fling), the address bar folding away, or the browser scrolling
        a focused link into view do not. The old code tried a 300ms guard. */
     let opened = null;
+    /* A trackpad goes on sending wheel events after the fingers have left
+       it — momentum, with Lenis's own glide on top. The browser does not
+       tell them from a new stroke. So: wheel events already arriving when a
+       dropdown opens are momentum, and close nothing; once they have paused
+       for MOMENTUM_GAP, the next one is the user's own. Without this, a
+       dropdown pressed while the page still coasted closed at once. */
+    const MOMENTUM_GAP = 150;
+    let lastWheel = -Infinity;
+    const coasting = () => performance.now() - lastWheel < MOMENTUM_GAP;
     /* Bodies the browser could not fit, placed by measuring this time. */
     const measured = new WeakSet();
     const float = (root) => {
@@ -378,7 +387,7 @@ export function initDropdown() {
         head?.setAttribute("aria-expanded", String(open));
         const input = searchOf(root);
         if (open) {
-            opened = { root, y: scrollY, userScrolled: false };
+            opened = { root, y: scrollY, userScrolled: false, coasting: coasting() };
             syncCaseToggle(root);
             float(root);
             // A searchable list opens ready to type into. A frame later: the
@@ -479,8 +488,15 @@ export function initDropdown() {
         opened.userScrolled = true;
     };
     const onWheel = (event) => {
-        if (live === self)
-            markUserScroll(event.target);
+        if (live !== self)
+            return;
+        const momentum = opened?.coasting && coasting();
+        lastWheel = performance.now();
+        if (momentum)
+            return;
+        if (opened)
+            opened.coasting = false;
+        markUserScroll(event.target);
     };
     const onTouchMove = (event) => {
         if (live === self)
@@ -557,7 +573,7 @@ export function initDropdown() {
     // Markup that starts open (data-pg-dropdown-active="true").
     const startOpen = rootsOf().find(isOpen);
     if (startOpen) {
-        opened = { root: startOpen, y: scrollY, userScrolled: false };
+        opened = { root: startOpen, y: scrollY, userScrolled: false, coasting: false };
         float(startOpen);
     }
     return () => {
