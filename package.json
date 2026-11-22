@@ -1,6 +1,6 @@
 {
     "name": "@plusguard/dropdown",
-    "version": "1.4.1",
+    "version": "1.4.2",
     "description": "A head that opens a body, from HTML attributes. Closes on an outside press, Escape, focus leaving and page scroll; one open at a time. Zero dependencies, framework-agnostic, accessible. CSS included.",
     "type": "module",
     "main": "./dist/index.js",
@@ -14,6 +14,7 @@
     "scripts": {
         "build": "npx -p typescript tsc index.ts --outDir dist --declaration --target es2020 --module es2020 --lib dom,es2020 --strict"
     },
+    "publishConfig": { "access": "public" },
     "license": "MIT",
     "author": "PlusGuard",
     "repository": { "type": "git", "url": "git+https://github.com/omisilli/dropdown.git" },

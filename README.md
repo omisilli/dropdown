@@ -14,7 +14,7 @@ stylesheet, no dependencies, framework-agnostic.
 ```
 
 ```sh
-npm install github:omisilli/dropdown#v1.4.1
+npm install @plusguard/dropdown
 ```
 
 ```ts
@@ -36,16 +36,16 @@ Load both halves straight from jsDelivr — no install, and the page works
 when opened by double-clicking:
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/omisilli/dropdown@v1.4.1/index.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@plusguard/dropdown@1.4.2/index.css" />
 
 <script type="module">
-    import { initDropdown } from "https://cdn.jsdelivr.net/gh/omisilli/dropdown@v1.4.1/dist/index.js";
+    import { initDropdown } from "https://cdn.jsdelivr.net/npm/@plusguard/dropdown@1.4.2/dist/index.js";
 
     initDropdown();
 </script>
 ```
 
-Pin the version (`@v1.4.1`) on a live site. A pinned URL never changes;
+Pin the version (`@1.4.2`) on a live site. A pinned URL never changes;
 `@1` follows the newest 1.x release.
 
 ## Files
