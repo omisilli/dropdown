@@ -20,7 +20,7 @@
                 --hover: #f0f0ec;
                 --accent: #2f5bea;
                 --shadow: 0 12px 32px rgb(0 0 0 / 0.12);
-                color-scheme: light dark;
+                color-scheme: light;
 
                 /* Flipped bodies keep this far from the screen's edges:
                    12px on phones, 24px from 48rem up. */
@@ -31,17 +31,17 @@
                     --pg-dropdown-edge: 24px;
                 }
             }
-            @media (prefers-color-scheme: dark) {
-                :root {
-                    --bg: #111113;
-                    --surface: #1b1b1f;
-                    --fg: #ededef;
-                    --muted: #9a9aa3;
-                    --line: #2c2c31;
-                    --hover: #26262b;
-                    --accent: #7c9cff;
-                    --shadow: 0 12px 32px rgb(0 0 0 / 0.5);
-                }
+            /* Dark: as the switch says — or the system, its default. */
+            :root[data-scheme="dark"] {
+                --bg: #111113;
+                --surface: #1b1b1f;
+                --fg: #ededef;
+                --muted: #9a9aa3;
+                --line: #2c2c31;
+                --hover: #26262b;
+                --accent: #7c9cff;
+                --shadow: 0 12px 32px rgb(0 0 0 / 0.5);
+                color-scheme: dark;
             }
 
             * {
@@ -272,7 +272,45 @@
                 margin: 0.4rem 0 0 1.25rem;
                 color: var(--muted);
             }
+            /* The colour-scheme switch. */
+            .scheme {
+                display: inline-flex;
+                width: fit-content;
+                gap: 0.25rem;
+                margin-top: 1rem;
+                padding: 0.25rem;
+                border: 1px solid var(--line);
+                border-radius: 999px;
+            }
+            .scheme button {
+                padding: 0.35rem 0.8rem;
+                margin: 0;
+                border: 0;
+                border-radius: 999px;
+                font: inherit;
+                font-size: 0.8125rem;
+                line-height: 1.2;
+                color: var(--muted);
+                background: none;
+                cursor: pointer;
+            }
+            .scheme button[aria-pressed="true"] {
+                color: var(--bg);
+                background: var(--fg);
+            }
         </style>
+        <script>
+            // Light or dark before the first paint: the switch's choice — one for
+            // every example — or the system's.
+            (() => {
+                let choice = "system";
+                try {
+                    choice = localStorage.getItem("pg-example-scheme") || "system";
+                } catch {}
+                const dark = choice === "dark" || (choice === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
+                document.documentElement.dataset.scheme = dark ? "dark" : "light";
+            })();
+        </script>
     </head>
     <body>
         <header class="bar">
@@ -315,6 +353,11 @@
                 you see here — colours, the arrow, the shadow — is this page's own CSS.
             </p>
 
+            <div class="scheme" role="group" aria-label="Colour scheme">
+                <button type="button" data-scheme-choice="system">System</button>
+                <button type="button" data-scheme-choice="light">Light</button>
+                <button type="button" data-scheme-choice="dark">Dark</button>
+            </div>
             <h2>Choosing closes it</h2>
             <div class="row">
                 <div data-pg-dropdown data-pg-dropdown-active="false">
@@ -703,6 +746,41 @@
                     .querySelector("[data-pg-dropdown-head]");
                 head.textContent = `Sort: ${option.textContent.toLowerCase()}`;
             });
+        </script>
+        <script>
+            // The colour-scheme switch: one choice for every example, kept in this
+            // browser — an example open in another tab follows it.
+            (() => {
+                const key = "pg-example-scheme";
+                const root = document.documentElement;
+                const system = matchMedia("(prefers-color-scheme: dark)");
+                const buttons = document.querySelectorAll("[data-scheme-choice]");
+                let choice = "system";
+                try {
+                    choice = localStorage.getItem(key) || "system";
+                } catch {}
+                const apply = () => {
+                    const dark = choice === "dark" || (choice === "system" && system.matches);
+                    root.dataset.scheme = dark ? "dark" : "light";
+                    buttons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.schemeChoice === choice)));
+                };
+                buttons.forEach((b) =>
+                    b.addEventListener("click", () => {
+                        choice = b.dataset.schemeChoice;
+                        try {
+                            localStorage.setItem(key, choice);
+                        } catch {}
+                        apply();
+                    }),
+                );
+                system.addEventListener("change", apply);
+                addEventListener("storage", (e) => {
+                    if (e.key !== key) return;
+                    choice = e.newValue || "system";
+                    apply();
+                });
+                apply();
+            })();
         </script>
     </body>
 </html>
